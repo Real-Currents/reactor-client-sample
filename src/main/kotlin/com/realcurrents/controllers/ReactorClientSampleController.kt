@@ -3,6 +3,7 @@ package com.realcurrents.controllers
 import com.realcurrents.ReactorClientDownloader
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.launch
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -30,11 +31,15 @@ public class ReactorClientSampleController {
         val quickResponse: HashMap<String, Any> = HashMap<String, Any>()
         quickResponse.set("Status", "Downloading set of all files from "+ downloader.base)
 
-        async {
-            retrieveFileSet("small")
-            retrieveFileSet("medium")
-            retrieveFileSet("large")
-            retrieveFileSet("xlarge")
+        launch {
+            delay((300.toLong()), TimeUnit.MILLISECONDS)
+            getSmallFiles()
+            delay(300.toLong(), TimeUnit.MILLISECONDS)
+            getMediumFiles()
+            delay(300.toLong(), TimeUnit.MILLISECONDS)
+            getLargeFiles()
+            delay(300.toLong(), TimeUnit.MILLISECONDS)
+            getExtraLargeFiles()
         }
 
         return ResponseEntity.ok(quickResponse)
@@ -153,7 +158,7 @@ public class ReactorClientSampleController {
             setList.remove(setList.last())
 
             /* After ... seconds, close the ReactorClient connection */
-            delay((Math.random() * 999).toLong() + setLimit *30000, TimeUnit.MILLISECONDS)
+            delay((Math.random() * 999).toLong() + setLimit*3000, TimeUnit.MILLISECONDS)
 
             println("Close ReactorClient connection and dispose of ${name[0]}")
             disposable.dispose()

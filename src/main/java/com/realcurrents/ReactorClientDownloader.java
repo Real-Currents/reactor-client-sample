@@ -2,6 +2,7 @@ package com.realcurrents;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -130,6 +131,9 @@ public class ReactorClientDownloader {
                                     
                                 } catch (IOException e) {
                                     System.out.println(e.getMessage());
+                                    
+                                } finally {
+                                    ((NettyDataBuffer) dataBuffer).release();
                                 }
                             }
                         })
@@ -149,27 +153,23 @@ public class ReactorClientDownloader {
                             
                             System.out.println("fluxStream " + checkStream + " has grown to :" + s + " bytes");
 
-                            if (number > 1) {
+                            if (number > 1 && partBytes.get() <= (mark - 8193)) {
+                                InputStream uploadPartStream;
 
-                                if (partBytes.get() <= (mark - 8193)) {
-                                    InputStream uploadPartStream;
+                                System.out.println("Encode final part for assembly of "+ url);
 
-                                    System.out.println("Encode final part for assembly of "+ url);
+                                totalBytes.addAndGet(size);
+                                System.out.println(
+                                    "Encode chunk " + number + " to InputStream: " + size + " bytes");
+                                
+                                /* Do something with streamCollector.getInputStream() */
+                                // ...
 
-                                    totalBytes.addAndGet(size);
-                                    System.out.println(
-                                        "Encode chunk " + number + " to InputStream: " + size + " bytes");
-                                    
-                                    /* Do something with streamCollector.getInputStream() */
-                                    // ...
+                                partBytes.set(0);
 
-                                    partBytes.set(0);
-    
-                                    if (streamCollector.getInputStream() != null) {
-                                        streamCollector.getInputStream().close();
-                                        streamCollector.clear();
-                                    }
-
+                                if (streamCollector.getInputStream() != null) {
+                                    streamCollector.getInputStream().close();
+                                    streamCollector.clear();
                                 }
 
                             } else {
