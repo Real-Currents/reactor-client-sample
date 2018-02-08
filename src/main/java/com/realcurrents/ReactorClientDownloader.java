@@ -13,9 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
+import java.io.*;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Vector;
@@ -104,13 +102,20 @@ public class ReactorClientDownloader {
                                 InputStream chunkStream = dataBuffer.asInputStream();
                                 long size = partBytes.addAndGet(dataBuffer.readableByteCount());
                                 InputStream uploadPartStream;
-                                
-                                try {
                                 /* Progressively encode chunks of ~5MB to
                                  * save to disk or push to remote storage
                                  */
-                                    
-                                    inputStreamCollector.collectInputStream(chunkStream, size);
+                                
+                                try {
+    
+                                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                                    byte[] buffer = new byte[(int) size];
+                                    while (chunkStream.available() > 0) {
+                                        byteStream.write(buffer, 0, chunkStream.read(buffer));
+                                    }
+                                    /* ... now there's no worries about release() closing the stream prematurely */
+    
+                                    inputStreamCollector.collectInputStream(new ByteArrayInputStream(byteStream.toByteArray()), size);
                                     
                                     if (partBytes.get() > (mark - 8193)) {
                                         int number = chunks.getAndAdd(1);
